@@ -1,0 +1,16 @@
+name: On Push Email
+
+on: [push]
+
+jobs:
+  send-mail:
+    runs-on: ubuntu-latest
+    name: Send email on every push
+    steps:
+    - uses: vineetchoudhary/Mailgun@master
+      id: sendmail
+      name: Send Mail Action
+      with:
+        apiKey: ${{ secrets.APIKEY }}
+        domain: ${{ secrets.DOMAIN }}
+        to: vineetchoudhary@live.in
