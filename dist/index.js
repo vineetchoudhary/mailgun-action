@@ -10,8 +10,23 @@ try {
     const text = core.getInput('text');
     const html = core.getInput('html');
     const amphtml = core.getInput('amp-html');
-    core.setOutput("domain", domain);
-    core.setOutput("to", to);
+    var mailgun = require('mailgun-js')({apiKey: apiKey, domain: domain});
+ 
+    var data = {
+        from: 'hello@'+domain,
+        to: to,
+        subject: subject,
+        html: html
+    };
+    
+    mailgun.messages().send(data, function (error, body) {
+        if (error) {
+            core.setFailed(error);
+        } else {
+            core.setOutput(body);
+        }
+
+    });
 } catch (error) {
     core.setFailed(error.message);
 }
