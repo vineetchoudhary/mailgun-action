@@ -17,7 +17,6 @@ inputs:
     from:
         description: 'The email that will be shown as sender'
         required: false
-        default: 'sendgridmailaction@github.com'
     subject:
         description: 'Email subject'
         required: false
