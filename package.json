@@ -1,0 +1,24 @@
+{
+  "name": "MailgunAction",
+  "version": "1.0.0",
+  "description": "Github action to send a mail using the Mailgun API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vineetchoudhary/Mailgun.git"
+  },
+  "keywords": [],
+  "author": "Vineet Choudhary",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vineetchoudhary/Mailgun/issues"
+  },
+  "homepage": "https://github.com/vineetchoudhary/Mailgun#readme",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@actions/github": "^2.1.1"
+  }
+}
