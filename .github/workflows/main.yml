@@ -11,6 +11,6 @@ jobs:
       id: sendmail
       name: Send Mail Action
       with:
-        apiKey: ${{ secrets.APIKEY }}
+        apiKey: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
         to: vineetchoudhary@live.in
