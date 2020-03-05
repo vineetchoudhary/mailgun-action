@@ -10,7 +10,8 @@ try {
     const text = core.getInput('text');
     const html = core.getInput('html');
     const amphtml = core.getInput('amp-html');
-    core.setOutput("from", from);
+    core.setOutput("domain", domain);
+    core.setOutput("to", to);
 } catch (error) {
     core.setFailed(error.message);
 }
