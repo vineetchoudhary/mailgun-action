@@ -62,8 +62,7 @@ async function run() {
                     core.setFailed(sendError);
                     return;
                 } else {
-                    const bodyPayload = JSON.stringify(body, undefined, 2)
-                    core.setOutput('response', bodyPayload);
+                    core.setOutput('response', body.message);
                     return;
                 }
             });
@@ -71,7 +70,6 @@ async function run() {
     } catch (error) {
         core.setFailed(error.message);
     }
-
 }
 
 run()
