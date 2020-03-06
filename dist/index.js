@@ -1812,20 +1812,10 @@ class Command {
     }
 }
 function escapeData(s) {
-    console.log(s)
-    return (s || '')
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
+    return s;
 }
 function escapeProperty(s) {
-    console.log(s)
-    return (s || '')
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
+    return s;
 }
 //# sourceMappingURL=command.js.map
 
