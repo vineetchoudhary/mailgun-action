@@ -1,0 +1,22 @@
+name: Issue Activity
+
+on:
+  issue_comment:
+    types: [created, edited, deleted]
+    
+jobs:
+  send-mail:
+    runs-on: ubuntu-latest
+    name: Send email when issue created/edited/deleted
+    steps:
+      - name: Send Mail Action
+        id: sendmail
+        uses: vineetchoudhary/mailgun-action@master
+        with:
+          api-key: ${{ secrets.API_KEY }}
+          domain: ${{ secrets.DOMAIN }}
+          to: ${{ secrets.TO }}
+          subject: 'Issue Activity - {{ EVENT_PAYLOAD.action }}'
+          body: '\n\nBody - {{ EVENT_PAYLOAD.comment.body }} \n\nIssue Activity - {{ EVENT_PAYLOAD.action }}.  \n\nURL - {{ EVENT_PAYLOAD.comment.html_url }} \n\nBy - {{ EVENT_PAYLOAD.comment.user.login }}':  
+      - name: Send Mail Action Response
+        run: echo "${{ steps.sendmail.outputs.response }}":  
