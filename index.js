@@ -22,14 +22,16 @@ async function run() {
             .replace("$ISSUE$", issue)
             .replace("$ACTION$", action);
 
+        core.setOutput(body);
+        core.setOutput(subject);
         if (apiKey === undefined) {
-            throw new Error('Undefined Mailgun API key');
+            throw new Error('Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
         }
         if (domain === undefined) {
-            throw new Error('Undefined domain');
+            throw new Error('Undefined domain. Please add "domain" input in your workflow file.');
         }
         if (to === undefined) {
-            throw new Error('Undefined email address of the recipient(s)')
+            throw new Error('Undefined email address of the recipient(s). Please add "to" input in your workflow file.')
         }
 
         var mailgun = require('mailgun-js')({ apiKey: apiKey, domain: domain });
