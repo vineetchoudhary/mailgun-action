@@ -15,7 +15,7 @@ inputs:
         description: 'Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.'
         required: true
     from:
-        description: 'The email that will be shown as sender'
+        description: 'The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com'
         required: false
     subject:
         description: 'Email subject. Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'

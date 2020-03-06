@@ -39085,7 +39085,12 @@ async function run() {
         const apiKey = core.getInput('api-key');
         const domain = core.getInput('domain');
         const to = core.getInput('to');
-        const from = core.getInput('from');
+
+        var from = core.getInput('from');
+        if (from === undefined) {
+            from = 'hello@' + domain;
+        }
+
         var subject = core.getInput('subject');
         var body = core.getInput('body');
 
@@ -39115,7 +39120,7 @@ async function run() {
         var MailComposer = __webpack_require__(842);
 
         var data = {
-            from: 'hello@' + domain,
+            from: from,
             to: to,
             subject: subject,
             html: body
