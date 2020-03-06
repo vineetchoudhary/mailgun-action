@@ -17,6 +17,6 @@ jobs:
           domain: ${{ secrets.DOMAIN }}
           to: ${{ secrets.TO }}
           subject: 'Issue Activity - {{ EVENT_PAYLOAD.action }}'
-          body: '\n\nBody - {{ EVENT_PAYLOAD.comment.body }} \n\nIssue Activity - {{ EVENT_PAYLOAD.action }}.  \n\nURL - {{ EVENT_PAYLOAD.comment.html_url }} \n\nBy - {{ EVENT_PAYLOAD.comment.user.login }}' 
+          body: '<p><b>Body</b> - {{ EVENT_PAYLOAD.comment.body }} <br /><br /><b>Issue Activity</b> - {{ EVENT_PAYLOAD.action }}.  <br /><br /><b>URL</b> - {{ EVENT_PAYLOAD.comment.html_url }}  <br /><br /><b>By</b> - {{ EVENT_PAYLOAD.comment.user.login }}</p>' 
       - name: Send Mail Action Response
-        run: echo "${{ steps.sendmail.outputs.response }}"
+        run: echo "${{ steps.sendmail.outputs.response }}" 
