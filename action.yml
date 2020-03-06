@@ -21,16 +21,8 @@ inputs:
         description: 'Email subject'
         required: false
         default: 'GitHub action notification'
-    text:
-        description: 'Body of the email. (text version). The placeholders that can be used are $EVENT$, $ISSUE$, $ACTION$'
-        required: false
-        default: The following action $ACTION$ produced an event $EVENT$ 
-    html:
+    body:
         description: 'Body of the email. (HTML version). The placeholders that can be used are $EVENT$, $ISSUE$, $ACTION$'
-        required: false
-        default: The following action $ACTION$ produced an event $EVENT$ 
-    amp-html:
-        description: 'AMP part of the email. Please follow google AMP guidelines to compose and send AMP emails.'
         required: false
 runs:
     using: 'node12'

@@ -4,7 +4,7 @@
   "description": "Github action to send a mail using the Mailgun API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "package": "ncc build index.js -o dist"
   },
   "repository": {
     "type": "git",
