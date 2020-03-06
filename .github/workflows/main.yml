@@ -13,4 +13,4 @@ jobs:
       with:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
-        to: vineetchoudhary@live.in
+        to: ${{ secrets.TO }}
