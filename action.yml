@@ -18,13 +18,11 @@ inputs:
         description: 'The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com'
         required: false
     subject:
-        description: 'Email subject. Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'
+        description: 'Email subject.'
         required: false
-        default: 'GitHub action notification - $ACTION$'
     body:
-        description: 'Body of the email (HTML Supported). Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'
+        description: 'Body of the email (HTML Supported).'
         required: false
-        default: 'The following action $ACTION$ produced an event $EVENT$'
 outputs:
     response:
         description: 'Response from Mailgun.'
