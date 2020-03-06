@@ -19,7 +19,7 @@ async function run() {
             subject: subject,
             html: body
         };
-        var mail = new MailComposer(mailOptions);
+        var mail = new MailComposer(data);
         mail.compile().build((err, message) => {
             if (err) {
                 core.setFailed(err);
