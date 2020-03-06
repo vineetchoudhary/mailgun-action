@@ -1812,12 +1812,14 @@ class Command {
     }
 }
 function escapeData(s) {
+    console.log(s)
     return (s || '')
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A');
 }
 function escapeProperty(s) {
+    console.log(s)
     return (s || '')
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
@@ -39109,8 +39111,6 @@ async function run() {
             .replace("$ISSUE$", issue)
             .replace("$ACTION$", action);
 
-        core.setOutput(body);
-        core.setOutput(subject);
         if (apiKey === undefined) {
             throw new Error('Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
         }

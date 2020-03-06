@@ -22,8 +22,6 @@ async function run() {
             .replace("$ISSUE$", issue)
             .replace("$ACTION$", action);
 
-        core.setOutput(body);
-        core.setOutput(subject);
         if (apiKey === undefined) {
             throw new Error('Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
         }
