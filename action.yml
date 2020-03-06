@@ -18,12 +18,13 @@ inputs:
         description: 'The email that will be shown as sender'
         required: false
     subject:
-        description: 'Email subject'
+        description: 'Email subject. Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'
         required: false
-        default: 'GitHub action notification'
+        default: 'GitHub action notification - $ACTION$'
     body:
-        description: 'Body of the email. (HTML version). The placeholders that can be used are $EVENT$, $ISSUE$, $ACTION$'
+        description: 'Body of the email (HTML Supported). Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'
         required: false
+        default: 'The following action $ACTION$ produced an event $EVENT$'
 runs:
     using: 'node12'
     main: 'dist/index.js'

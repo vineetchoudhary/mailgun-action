@@ -39094,14 +39094,36 @@ async function run() {
         const domain = core.getInput('domain');
         const to = core.getInput('to');
         const from = core.getInput('from');
-        const subject = core.getInput('subject');
-        const body = core.getInput('body');
-    
-        var mailgun = __webpack_require__(270)({apiKey: apiKey, domain: domain});
+        var subject = core.getInput('subject');
+        var body = core.getInput('body');
+
+        const event = github.context.eventName;
+        const action = github.context.action;
+        const issue = github.context.issue;
+
+        body = body.replace("$EVENT$", event)
+            .replace("$ISSUE$", issue)
+            .replace("$ACTION$", action);
+
+        subject = subject.replace("$EVENT$", event)
+            .replace("$ISSUE$", issue)
+            .replace("$ACTION$", action);
+
+        if (apiKey === undefined) {
+            throw new Error('Undefined Mailgun API key');
+        }
+        if (domain === undefined) {
+            throw new Error('Undefined domain');
+        }
+        if (to === undefined) {
+            throw new Error('Undefined email address of the recipient(s)')
+        }
+
+        var mailgun = __webpack_require__(270)({ apiKey: apiKey, domain: domain });
         var MailComposer = __webpack_require__(842);
-    
+
         var data = {
-            from: 'hello@'+domain,
+            from: 'hello@' + domain,
             to: to,
             subject: subject,
             html: body
@@ -39116,7 +39138,7 @@ async function run() {
                 to: to,
                 message: message.toString('ascii')
             };
-         
+
             mailgun.messages().sendMime(dataToSend, (sendError, body) => {
                 if (sendError) {
                     core.setFailed(sendError);
@@ -39130,7 +39152,7 @@ async function run() {
     } catch (error) {
         core.setFailed(error.message);
     }
-    
+
 }
 
 run()
