@@ -25,6 +25,9 @@ inputs:
         description: 'Body of the email (HTML Supported). Following custom placeholders that can be used - $EVENT$, $ISSUE$, $ACTION$'
         required: false
         default: 'The following action $ACTION$ produced an event $EVENT$'
+outputs:
+    response:
+        description: 'Response from Mailgun.'
 runs:
     using: 'node12'
     main: 'dist/index.js'

@@ -62,7 +62,7 @@ async function run() {
                     core.setFailed(sendError);
                     return;
                 } else {
-                    core.setOutput(body);
+                    core.setOutput('response', body);
                     return;
                 }
             });

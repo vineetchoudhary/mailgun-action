@@ -7,10 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Send email on every push
     steps:
-    - uses: vineetchoudhary/Mailgun@master
+    - name: Send Mail Action
       id: sendmail
-      name: Send Mail Action
+      uses: vineetchoudhary/Mailgun@master
       with:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
         to: ${{ secrets.TO }}
+    - name: Send Mail Action Response
+      run: echo "${{ steps.sendmail.outputs.response }}"
