@@ -9,7 +9,7 @@ jobs:
     steps:
     - name: Send Mail Action
       id: sendmail
-      uses: vineetchoudhary/Mailgun@master
+      uses: vineetchoudhary/mailgun-action@master
       with:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
