@@ -1,41 +1,41 @@
 # Mailgun Action
-Github action to send a mail using the Mailgun API
+Github action to send an mail using the Mailgun API. This is a re-usable Github Action that you can use to send mail for any purposes every time some event trigger for a repository. 
 
 ## Inputs
 
-### 1. api-key
+#### 1. api-key
 **Required** Mailgun API Key.
 
-### 2. domain
+#### 2. domain
 **Required** Your Domain Name.
 
-### 3.to
+#### 3.to
 **Required** Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.
 
-### 4. from
+#### 4. from
 The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com
 
-### 5. subject
+#### 5. subject
 Email subject. Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
-### 6. body
+#### 6. body
 Body of the email (HTML Supported). Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
 ## Outputs
 
-### response
+#### 1. response
 Email response from Mailgun.
 
 ## Advance Usage
 For subject and body we can use environment variables and event payload in following way - 
 
-### Environment Variables
+### 1. Environment Variables
 Environment variables can be interpolated in the message using brackets (`{{` and `}}`). Like -
 ```
 Action Called : {{ GITHUB_ACTION }}
 ```
 
-### Event Payload
+### 2. Event Payload
 Event Payload data can also be interpolated in the message using brackets (`{{` and `}}`) with the `EVENT_PAYLOAD` variable. Like - 
 
 ```
