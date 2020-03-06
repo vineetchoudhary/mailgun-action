@@ -1,4 +1,4 @@
-name: 'Mailgun'
+name: 'Mailgun Action'
 author: 'Vineet Choudhary'
 description: 'Github action to send a mail using the Mailgun API'
 branding:
