@@ -8,7 +8,7 @@ async function run() {
         const to = core.getInput('to');
 
         var from = core.getInput('from');
-        if (from === undefined) {
+        if (from === undefined || from == '') {
             from = 'hello@' + domain;
         }
 
