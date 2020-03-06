@@ -17,7 +17,7 @@ async function run() {
             from: 'hello@'+domain,
             to: to,
             subject: subject,
-            html: html
+            html: body
         };
         var mail = new MailComposer(mailOptions);
         mail.compile().build((err, message) => {
