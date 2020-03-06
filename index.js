@@ -1,40 +1,56 @@
 const core = require('@actions/core');
-const github = require('@actions/github');
+const fs = require('fs');
+const loadsh = require('lodash');
 
 async function run() {
     try {
+        //fixed inputs
         const apiKey = core.getInput('api-key');
         const domain = core.getInput('domain');
         const to = core.getInput('to');
 
+        if (apiKey === undefined || apiKey == '') {
+            throw new Error('Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
+        }
+        if (domain === undefined || domain == '') {
+            throw new Error('Undefined domain. Please add "domain" input in your workflow file.');
+        }
+        if (to === undefined || to == '') {
+            throw new Error('Undefined email address of the recipient(s). Please add "to" input in your workflow file.')
+        }
+
+        //from
         var from = core.getInput('from');
         if (from === undefined || from == '') {
             from = 'hello@' + domain;
         }
 
+        //Get process env var
+        const {
+            GITHUB_EVENT_PATH,
+            GITHUB_ACTOR,
+            GITHUB_EVENT_NAME,
+            GITHUB_REPOSITORY
+        } = process.env;
+        
+        const EVENT_PAYLOAD = JSON.parse(fs.readFileSync(GITHUB_EVENT_PATH, "utf8"));
+        const DEFAULT_MESSAGE = `@${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}`;
+        const ReplaceMustaches = data => loadsh.template(data)({ ...process.env, EVENT_PAYLOAD })
+
+        //subject
         var subject = core.getInput('subject');
+        if (subject === undefined || subject == '') {
+            subject = DEFAULT_MESSAGE;
+        } else {
+            subject = ReplaceMustaches(subject);
+        }
+
+        //body
         var body = core.getInput('body');
-
-        const event = github.context.eventName;
-        const action = github.context.action;
-        const issue = github.context.issue;
-
-        body = body.replace("$EVENT$", event)
-            .replace("$ISSUE$", issue)
-            .replace("$ACTION$", action);
-
-        subject = subject.replace("$EVENT$", event)
-            .replace("$ISSUE$", issue)
-            .replace("$ACTION$", action);
-
-        if (apiKey === undefined) {
-            throw new Error('Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
-        }
-        if (domain === undefined) {
-            throw new Error('Undefined domain. Please add "domain" input in your workflow file.');
-        }
-        if (to === undefined) {
-            throw new Error('Undefined email address of the recipient(s). Please add "to" input in your workflow file.')
+        if (body === undefined || body == '') {
+            body = DEFAULT_MESSAGE;
+        } else {
+            body = ReplaceMustaches(body);
         }
 
         var mailgun = require('mailgun-js')({ apiKey: apiKey, domain: domain });
