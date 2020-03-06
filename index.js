@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const fs = require('fs');
-const loadsh = require('lodash');
+const _ = require('lodash');
 
 async function run() {
     try {
@@ -35,7 +35,9 @@ async function run() {
         
         const EVENT_PAYLOAD = JSON.parse(fs.readFileSync(GITHUB_EVENT_PATH, "utf8"));
         const DEFAULT_MESSAGE = `@${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}`;
-        const ReplaceMustaches = data => loadsh.template(data)({ ...process.env, EVENT_PAYLOAD })
+        
+        _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
+        const ReplaceMustaches = data => _.template(data)({ ...process.env, EVENT_PAYLOAD })
 
         //subject
         var subject = core.getInput('subject');

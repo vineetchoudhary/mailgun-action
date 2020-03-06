@@ -33997,7 +33997,7 @@ Agent.prototype.freeSocket = function freeSocket(socket, opts) {
 
 const core = __webpack_require__(148);
 const fs = __webpack_require__(747);
-const loadsh = __webpack_require__(426);
+const _ = __webpack_require__(426);
 
 async function run() {
     try {
@@ -34032,7 +34032,9 @@ async function run() {
         
         const EVENT_PAYLOAD = JSON.parse(fs.readFileSync(GITHUB_EVENT_PATH, "utf8"));
         const DEFAULT_MESSAGE = `@${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}`;
-        const ReplaceMustaches = data => loadsh.template(data)({ ...process.env, EVENT_PAYLOAD })
+        
+        _.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
+        const ReplaceMustaches = data => _.template(data)({ ...process.env, EVENT_PAYLOAD })
 
         //subject
         var subject = core.getInput('subject');
