@@ -9,7 +9,7 @@ Github action to send an mail using the Mailgun API. This is a re-usable Github 
 ### 2. domain
 **Required** Your Domain Name.
 
-#### 3.to
+### 3. to
 **Required** Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.
 
 ### 4. from
