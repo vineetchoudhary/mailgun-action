@@ -55,12 +55,19 @@ async function run() {
             body = ReplaceMustaches(body);
         }
 
+        //cc
+        var cc = core.getInput('cc');
+        if (cc === undefined) {
+            cc = '';
+        }
+
         var mailgun = require('mailgun-js')({ apiKey: apiKey, domain: domain });
         var MailComposer = require('nodemailer/lib/mail-composer');
 
         var data = {
             from: from,
             to: to,
+            cc: cc,
             subject: subject,
             html: body
         };
@@ -72,6 +79,7 @@ async function run() {
             }
             var dataToSend = {
                 to: to,
+                cc: cc,
                 message: message.toString('ascii')
             };
 
