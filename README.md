@@ -21,6 +21,9 @@ Email subject. Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_RE
 ### 6. body
 Body of the email (HTML Supported). Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
+### 7. cc
+Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.
+
 ## Outputs
 
 ### 1. response

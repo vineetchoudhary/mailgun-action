@@ -14,6 +14,9 @@ inputs:
     to:
         description: 'Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.'
         required: true
+    cc:
+        description: 'Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.'
+        required: false
     from:
         description: 'The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com'
         required: false
