@@ -14,5 +14,6 @@ jobs:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
         to: ${{ secrets.TO }}
+        cc: ${{ secrets.CC }}
     - name: Send Mail Action Response
       run: echo "${{ steps.sendmail.outputs.response }}"
