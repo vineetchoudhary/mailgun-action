@@ -1,0 +1,19 @@
+name: On Push Email
+
+on: [push]
+
+jobs:
+  send-mail:
+    runs-on: ubuntu-latest
+    name: Send email on every push
+    steps:
+    - name: Send Mail Action
+      id: sendmail
+      uses: aquarhead/mailgun-action@cc
+      with:
+        api-key: ${{ secrets.API_KEY }}
+        domain: ${{ secrets.DOMAIN }}
+        to: ${{ secrets.TO }}
+        cc: ${{ secrets.CC }}
+    - name: Send Mail Action Response
+      run: echo "${{ steps.sendmail.outputs.response }}"
