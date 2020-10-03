@@ -1,7 +1,5 @@
 name: On Push Email
-
 on: [push]
-
 jobs:
   send-mail:
     runs-on: ubuntu-latest
