@@ -12,17 +12,17 @@ Github action to send an mail using the Mailgun API. This is a re-usable Github 
 ### 3. to
 **Required** Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.
 
-### 4. from
+### 4. cc
+Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.
+
+### 5. from
 The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com
 
-### 5. subject
+### 6. subject
 Email subject. Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
-### 6. body
+### 7. body
 Body of the email (HTML Supported). Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
-
-### 7. cc
-Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.
 
 ## Outputs
 
@@ -63,7 +63,7 @@ jobs:
     steps:
     - name: Send Mail Action
       id: sendmail
-      uses: vineetchoudhary/mailgun-action@v1.0
+      uses: vineetchoudhary/mailgun-action@master
       with:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
@@ -92,7 +92,7 @@ jobs:
     steps:
       - name: Send Mail Action
         id: sendmail
-        uses: vineetchoudhary/mailgun-action@v1.0
+        uses: vineetchoudhary/mailgun-action@master
         with:
           api-key: ${{ secrets.API_KEY }}
           domain: ${{ secrets.DOMAIN }}
