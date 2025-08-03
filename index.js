@@ -88,8 +88,12 @@ async function run() {
                     core.setFailed(sendError);
                     return;
                 } else {
-                    core.setOutput('response', body.message);
-                    return;
+                // Write output to GITHUB_OUTPUT file (recommended way)
+                const outputFile = process.env.GITHUB_OUTPUT;
+                if (outputFile) {
+                    fs.appendFileSync(outputFile, `response<<EOF\n${body.message}\nEOF\n`);
+                }
+                return;
                 }
             });
         });
