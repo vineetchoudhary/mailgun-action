@@ -19,7 +19,7 @@
   "homepage": "https://github.com/vineetchoudhary/Mailgun#readme",
   "dependencies": {
     "@actions/core": "^1.9.1",
-    "@actions/github": "^2.1.1",
+    "@actions/github": "^6.0.1",
     "fs": "0.0.1-security",
     "lodash": "^4.17.21",
     "mailgun-js": "^0.22.0",
