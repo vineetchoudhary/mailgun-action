@@ -23,7 +23,7 @@
     "fs": "0.0.1-security",
     "lodash": "^4.17.21",
     "mailgun-js": "^0.22.0",
-    "nodemailer": "^7.0.0"
+    "nodemailer": "^7.0.7"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.38.3"
