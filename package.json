@@ -21,7 +21,7 @@
     "@actions/core": "^1.9.1",
     "@actions/github": "^6.0.0",
     "fs": "0.0.1-security",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "mailgun-js": "^0.22.0",
     "nodemailer": "^7.0.0"
   },
