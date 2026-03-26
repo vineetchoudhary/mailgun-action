@@ -17,8 +17,19 @@ function issueWorkflowCommand(command, value) {
 }
 
 function getInput(name) {
-    const inputKey = `INPUT_${name.replace(/ /g, '_').replace(/-/g, '_').toUpperCase()}`;
-    return (process.env[inputKey] || '').trim();
+    const normalizedName = name.replace(/ /g, '_').toUpperCase();
+    const candidateKeys = [
+        `INPUT_${normalizedName.replace(/-/g, '_')}`,
+        `INPUT_${normalizedName}`
+    ];
+
+    for (const key of candidateKeys) {
+        if (typeof process.env[key] === 'string') {
+            return process.env[key].trim();
+        }
+    }
+
+    return '';
 }
 
 function setOutput(name, value) {
