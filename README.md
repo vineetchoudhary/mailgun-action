@@ -9,19 +9,25 @@ Github action to send an mail using the Mailgun API. This is a re-usable Github 
 ### 2. domain
 **Required** Your Domain Name.
 
-### 3. to
+### 3. api-base-url
+Optional Mailgun API base URL. Use `https://api.eu.mailgun.net` for EU-region domains.
+
+### 4. eu-region
+Optional shorthand for EU-region Mailgun accounts. Set this to `true` to use `https://api.eu.mailgun.net` automatically.
+
+### 5. to
 **Required** Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.
 
-### 4. cc
+### 6. cc
 Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.
 
-### 5. from
+### 7. from
 The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com
 
-### 6. subject
+### 8. subject
 Email subject. Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
-### 7. body
+### 9. body
 Body of the email (HTML Supported). Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
 
 ## Outputs
@@ -102,6 +108,29 @@ jobs:
       - name: Send Mail Action Response
         run: echo "${{ steps.sendmail.outputs.response }}" 
 ```
+
+### 3. Trigger an email for an EU-region Mailgun domain
+
+```
+name: EU Region Email
+
+on: [push]
+
+jobs:
+  send-mail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Mail Action
+        id: sendmail
+        uses: vineetchoudhary/mailgun-action@master
+        with:
+          api-key: ${{ secrets.API_KEY }}
+          eu-region: true
+          domain: ${{ secrets.DOMAIN }}
+          to: ${{ secrets.TO }}
+```
+
+Use `api-base-url` instead of `eu-region` if you want to pass the Mailgun base URL explicitly.
 
 **Preview**
 ![](/docs/images/IssueComment.png)

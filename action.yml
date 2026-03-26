@@ -11,6 +11,12 @@ inputs:
     domain:
         description: 'Your Domain Name'
         required: true
+    api-base-url:
+        description: 'Optional Mailgun API base URL. Use https://api.eu.mailgun.net for EU-region domains.'
+        required: false
+    eu-region:
+        description: 'Optional shorthand for EU Mailgun accounts. Set to true to use https://api.eu.mailgun.net.'
+        required: false
     to:
         description: 'Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.'
         required: true
