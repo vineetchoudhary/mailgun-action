@@ -1,63 +1,60 @@
 # Mailgun Action
-Github action to send an mail using the Mailgun API. This is a re-usable Github Action that you can use to send mail for any purposes every time some event trigger for a repository. 
 
-## Inputs
+📧 Send email from GitHub Actions using the Mailgun API.
 
-### 1. api-key
-**Required** Mailgun API Key.
+This action lets you send emails from any workflow event, with support for custom subjects, HTML bodies, event payload interpolation, and EU-region Mailgun accounts.
 
-### 2. domain
-**Required** Your Domain Name.
+## ✨ Features
 
-### 3. api-base-url
-Optional Mailgun API base URL. Use `https://api.eu.mailgun.net` for EU-region domains.
+- Send email through Mailgun from any GitHub Actions workflow
+- Use HTML in the message body
+- Interpolate GitHub environment variables and event payload data
+- Support Mailgun US and EU API endpoints
+- Return the Mailgun API response as a workflow output
 
-### 4. eu-region
-Optional shorthand for EU-region Mailgun accounts. Set this to `true` to use `https://api.eu.mailgun.net` automatically.
+## 📥 Inputs
 
-### 5. to
-**Required** Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.
+| Input | Required | Default | Description |
+| --- | --- | --- | --- |
+| `api-key` | Yes | None | Mailgun API key. |
+| `domain` | Yes | None | Verified Mailgun sending domain. |
+| `api-base-url` | No | Mailgun US API | Custom Mailgun API base URL. Use `https://api.eu.mailgun.net` for EU-region domains. |
+| `eu-region` | No | `false` | Shorthand for EU Mailgun accounts. Set to `true` to use `https://api.eu.mailgun.net`. |
+| `to` | Yes | None | Recipient email address. You can pass a comma-separated list. |
+| `cc` | No | Empty | Carbon-copy recipient list. You can pass a comma-separated list. |
+| `from` | No | `hello@<domain>` | Sender email address displayed in the message. |
+| `subject` | No | `@${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}` | Subject line for the email. |
+| `body` | No | `@${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}` | HTML body for the email. |
 
-### 6. cc
-Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.
+## 📤 Outputs
 
-### 7. from
-The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com
+| Output | Description |
+| --- | --- |
+| `response` | Response message returned by the Mailgun API. |
 
-### 8. subject
-Email subject. Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
+## 🧠 Template Interpolation
 
-### 9. body
-Body of the email (HTML Supported). Default is "${GITHUB_ACTOR} (${GITHUB_EVENT_NAME}) at ${GITHUB_REPOSITORY}".
+You can reference GitHub Actions environment variables and the GitHub event payload in `subject` and `body` using `{{ ... }}` syntax.
 
-## Outputs
+### Environment variables
 
-### 1. response
-Email response from Mailgun.
-
-## Advance Usage
-For subject and body we can use environment variables and event payload in following way - 
-
-### 1. Environment Variables
-Environment variables can be interpolated in the message using brackets (`{{` and `}}`). Like -
-```
-Action Called : {{ GITHUB_ACTION }}
+```text
+Action called: {{ GITHUB_ACTION }}
 ```
 
-### 2. Event Payload
-Event Payload data can also be interpolated in the message using brackets (`{{` and `}}`) with the `EVENT_PAYLOAD` variable. Like - 
+### Event payload data
 
+```text
+Pull request ID: {{ EVENT_PAYLOAD.pull_request.id }}
 ```
-Action Called: {{ GITHUB_ACTION }} as {{ EVENT_PAYLOAD.pull_request.id }}
-```
-Check example section for more usages. Also see all [event types](https://developer.github.com/v3/activity/events/types/) for valid payload informations.
 
+This is useful for building notification emails from workflow events such as `push`, `pull_request`, or `issue_comment`.
 
-## Example Usage
+## 🚀 Example Usage
 
-### 1. Trigger default email on every push
+### Default email on every push
 
-```
+```yaml
 name: On Push Email
 
 on: [push]
@@ -65,36 +62,35 @@ on: [push]
 jobs:
   send-mail:
     runs-on: ubuntu-latest
-    name: Send email on every push
     steps:
-    - name: Send Mail Action
-      id: sendmail
-      uses: vineetchoudhary/mailgun-action@master
-      with:
-        api-key: ${{ secrets.API_KEY }}
-        domain: ${{ secrets.DOMAIN }}
-        to: ${{ secrets.TO }}
-    - name: Send Mail Action Response
-      run: echo "${{ steps.sendmail.outputs.response }}"
+      - name: Send Mail Action
+        id: sendmail
+        uses: vineetchoudhary/mailgun-action@master
+        with:
+          api-key: ${{ secrets.API_KEY }}
+          domain: ${{ secrets.DOMAIN }}
+          to: ${{ secrets.TO }}
+
+      - name: Print Mailgun Response
+        run: echo "${{ steps.sendmail.outputs.response }}"
 ```
 
 **Preview**
+
 ![](/docs/images/OnPush.png)
 
-### 2. Trigger an email issue comment
-Trigger an email when someone comment on a issue with custom subject and body.
+### Issue comment notification with custom subject and HTML body
 
-```
+```yaml
 name: Issue Activity
 
 on:
   issue_comment:
     types: [created, edited, deleted]
-    
+
 jobs:
   send-mail:
     runs-on: ubuntu-latest
-    name: Send email when issue created/edited/deleted
     steps:
       - name: Send Mail Action
         id: sendmail
@@ -104,14 +100,19 @@ jobs:
           domain: ${{ secrets.DOMAIN }}
           to: ${{ secrets.TO }}
           subject: 'Issue Activity - {{ EVENT_PAYLOAD.action }}'
-          body: '<p><b>Body</b> - {{ EVENT_PAYLOAD.comment.body }} <br /><br /><b>Issue Activity</b> - {{ EVENT_PAYLOAD.action }}.  <br /><br /><b>URL</b> - {{ EVENT_PAYLOAD.comment.html_url }}  <br /><br /><b>By</b> - {{ EVENT_PAYLOAD.comment.user.login }}</p>' 
-      - name: Send Mail Action Response
-        run: echo "${{ steps.sendmail.outputs.response }}" 
+          body: '<p><b>Body</b> - {{ EVENT_PAYLOAD.comment.body }}<br /><br /><b>Issue Activity</b> - {{ EVENT_PAYLOAD.action }}<br /><br /><b>URL</b> - {{ EVENT_PAYLOAD.comment.html_url }}<br /><br /><b>By</b> - {{ EVENT_PAYLOAD.comment.user.login }}</p>'
+
+      - name: Print Mailgun Response
+        run: echo "${{ steps.sendmail.outputs.response }}"
 ```
 
-### 3. Trigger an email for an EU-region Mailgun domain
+**Preview**
 
-```
+![](/docs/images/IssueComment.png)
+
+### EU-region Mailgun account
+
+```yaml
 name: EU Region Email
 
 on: [push]
@@ -121,7 +122,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Mail Action
-        id: sendmail
         uses: vineetchoudhary/mailgun-action@master
         with:
           api-key: ${{ secrets.API_KEY }}
@@ -130,7 +130,39 @@ jobs:
           to: ${{ secrets.TO }}
 ```
 
-Use `api-base-url` instead of `eu-region` if you want to pass the Mailgun base URL explicitly.
+If you prefer, you can pass `api-base-url` directly instead of `eu-region`.
 
-**Preview**
-![](/docs/images/IssueComment.png)
+```yaml
+with:
+  api-key: ${{ secrets.API_KEY }}
+  api-base-url: https://api.eu.mailgun.net
+  domain: ${{ secrets.DOMAIN }}
+  to: ${{ secrets.TO }}
+```
+
+## ⚠️ Deliverability Notes
+
+If your email lands in spam, the cause is usually domain authentication rather than GitHub Actions itself.
+
+Check these Mailgun and DNS settings:
+
+- SPF is configured correctly for your sending domain
+- DKIM records are valid and verified
+- DMARC is configured for your domain
+- Your Mailgun domain is active and verified
+- If you use a sandbox domain, recipients are authorized in Mailgun
+
+## 🛠️ Troubleshooting
+
+### `Forbidden`
+
+Common causes:
+
+- API key and domain belong to different Mailgun regions
+- You need `eu-region: true` or `api-base-url: https://api.eu.mailgun.net`
+- The Mailgun domain is not active
+- The recipient is not authorized for a sandbox domain
+
+### `Undefined Mailgun API key`
+
+Make sure your workflow passes `api-key` under `with:` and that the referenced secret exists.
