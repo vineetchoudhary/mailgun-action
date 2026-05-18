@@ -19,7 +19,7 @@
   "homepage": "https://github.com/vineetchoudhary/Mailgun#readme",
   "dependencies": {
     "form-data": "^4.0.5",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "mailgun.js": "^12.7.1"
   },
   "devDependencies": {
