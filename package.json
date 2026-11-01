@@ -1,6 +1,6 @@
 {
   "name": "mailgun-action",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "GitHub action to send email using the Mailgun API",
   "main": "index.js",
   "scripts": {

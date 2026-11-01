@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: Send Mail Action
         id: sendmail
-        uses: vineetchoudhary/mailgun-action@master
+        uses: vineetchoudhary/mailgun-action@v2.0.0
         with:
           api-key: ${{ secrets.API_KEY }}
           domain: ${{ secrets.DOMAIN }}
@@ -106,7 +106,7 @@ jobs:
     steps:
       - name: Send Mail Action
         id: sendmail
-        uses: vineetchoudhary/mailgun-action@master
+        uses: vineetchoudhary/mailgun-action@v2.0.0
         with:
           api-key: ${{ secrets.API_KEY }}
           domain: ${{ secrets.DOMAIN }}
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Mail Action
-        uses: vineetchoudhary/mailgun-action@master
+        uses: vineetchoudhary/mailgun-action@v2.0.0
         with:
           api-key: ${{ secrets.API_KEY }}
           eu-region: true
