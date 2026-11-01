@@ -1,0 +1,21 @@
+# Public TLS identity used only by local delivery tests. Never use it for a service.
+[req]
+distinguished_name = dn
+x509_extensions = extensions
+prompt = no
+
+[dn]
+CN = Mailgun Action Local Test CA
+
+[extensions]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
+extendedKeyUsage = serverAuth
+subjectAltName = @names
+
+[names]
+DNS.1 = localhost
+DNS.2 = api.mailgun.net
+DNS.3 = api.eu.mailgun.net
+IP.1 = 127.0.0.1
+IP.2 = ::1

@@ -1,6 +1,6 @@
 name: 'Mailgun Action'
 author: 'Vineet Choudhary'
-description: 'Github action to send a mail using the Mailgun API'
+description: 'GitHub action to send email using the Mailgun API'
 branding:
     icon: 'mail'
     color: 'red'
@@ -12,7 +12,7 @@ inputs:
         description: 'Your Domain Name'
         required: true
     api-base-url:
-        description: 'Optional Mailgun API base URL. Use https://api.eu.mailgun.net for EU-region domains.'
+        description: 'Optional HTTPS Mailgun API base URL. Use https://api.eu.mailgun.net for EU-region domains.'
         required: false
     eu-region:
         description: 'Optional shorthand for EU Mailgun accounts. Set to true to use https://api.eu.mailgun.net.'
@@ -21,7 +21,7 @@ inputs:
         description: 'Email address of the recipient(s). Example: bob@host.com. You can use commas to separate multiple recipients.'
         required: true
     cc:
-        description: 'Email address to recieve carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.'
+        description: 'Email address to receive carbon copies. Example: bob@host.com. You can use commas to separate multiple recipients.'
         required: false
     from:
         description: 'The email that will be shown as sender. Default will be hello@+your domain name. Like - hello@example.com'
@@ -30,7 +30,7 @@ inputs:
         description: 'Email subject.'
         required: false
     body:
-        description: 'Body of the email (HTML Supported).'
+        description: 'HTML body of the email. Interpolated values are HTML-escaped.'
         required: false
 outputs:
     response:
