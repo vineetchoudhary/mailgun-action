@@ -1,9 +1,11 @@
-const fs = require('fs');
-const FormData = require('form-data');
-const Mailgun = require('mailgun.js');
-const _ = require('lodash');
+const fs = require('node:fs');
+const http = require('node:http');
+const { randomUUID } = require('node:crypto');
 
-_.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
+const REQUEST_TIMEOUT_MS = 30_000;
+const MAX_RESPONSE_BYTES = 1024 * 1024;
+const TEMPLATE_PATH = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[\s*(?:\d+|"[^"\\]*"|'[^'\\]*')\s*\])*$/;
+const FORBIDDEN_PROPERTIES = new Set(['__proto__', 'prototype', 'constructor']);
 
 function escapeWorkflowValue(value) {
     return String(value)
@@ -12,53 +14,48 @@ function escapeWorkflowValue(value) {
         .replace(/\n/g, '%0A');
 }
 
-function issueWorkflowCommand(command, value) {
-    process.stdout.write(`::${command}::${escapeWorkflowValue(value)}\n`);
+function issueWorkflowCommand(command, value, write = message => process.stdout.write(message)) {
+    write(`::${command}::${escapeWorkflowValue(value)}\n`);
 }
 
-function getInput(name) {
+function getInput(name, env = process.env) {
     const normalizedName = name.replace(/ /g, '_').toUpperCase();
     const candidateKeys = [
-        `INPUT_${normalizedName.replace(/-/g, '_')}`,
-        `INPUT_${normalizedName}`
+        `INPUT_${normalizedName}`,
+        `INPUT_${normalizedName.replace(/-/g, '_')}`
     ];
 
     for (const key of candidateKeys) {
-        if (typeof process.env[key] === 'string') {
-            return process.env[key].trim();
+        if (typeof env[key] === 'string') {
+            return env[key].trim();
         }
     }
 
     return '';
 }
 
-function setOutput(name, value) {
-    const outputValue = String(value);
-    const outputFile = process.env.GITHUB_OUTPUT;
+function setOutput(name, value, env = process.env, write) {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+        throw new Error('Invalid workflow output name.');
+    }
 
-    if (outputFile) {
-        fs.appendFileSync(outputFile, `${name}<<EOF\n${outputValue}\nEOF\n`);
+    const outputValue = String(value);
+
+    if (env.GITHUB_OUTPUT) {
+        let delimiter;
+        do {
+            delimiter = `mailgun_${randomUUID()}`;
+        } while (outputValue.includes(delimiter));
+
+        fs.appendFileSync(env.GITHUB_OUTPUT, `${name}<<${delimiter}\n${outputValue}\n${delimiter}\n`, 'utf8');
         return;
     }
 
-    issueWorkflowCommand(`set-output name=${name}`, outputValue);
+    issueWorkflowCommand(`set-output name=${name}`, outputValue, write);
 }
 
-function setSecret(value) {
-    issueWorkflowCommand('add-mask', value);
-}
-
-function warning(message) {
-    issueWorkflowCommand('warning', message);
-}
-
-function setFailed(message) {
-    process.exitCode = 1;
-    console.error(message);
-}
-
-function getRequiredInput(name, errorMessage) {
-    const value = getInput(name);
+function getRequiredInput(name, errorMessage, env) {
+    const value = getInput(name, env);
 
     if (!value) {
         throw new Error(errorMessage);
@@ -67,35 +64,173 @@ function getRequiredInput(name, errorMessage) {
     return value;
 }
 
-function getOptionalInput(name) {
-    return getInput(name);
-}
-
 function isTruthyInput(value) {
     return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 }
 
-function readEventPayload(eventPath) {
+function readEventPayload(eventPath, write) {
     if (!eventPath) {
         return {};
     }
 
     try {
         return JSON.parse(fs.readFileSync(eventPath, 'utf8'));
-    } catch (error) {
-        warning(`Unable to parse GITHUB_EVENT_PATH: ${error.message}`);
+    } catch {
+        issueWorkflowCommand('warning', 'Unable to read or parse GITHUB_EVENT_PATH. Event template values will be empty.', write);
         return {};
     }
 }
 
-function interpolateTemplate(template, context) {
-    return _.template(template)(context);
+function escapeHtml(value) {
+    return value.replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[character]);
+}
+
+function interpolateTemplate(template, context, html = false) {
+    return template.replace(/{{([\s\S]*?)}}/g, (match, expression) => {
+        const path = expression.trim();
+
+        if (!TEMPLATE_PATH.test(path)) {
+            throw new Error('Unsupported template expression. Use environment variable names or event data paths inside {{ ... }}.');
+        }
+
+        const properties = path.match(/[A-Za-z_$][\w$]*|\d+|"[^"\\]*"|'[^'\\]*'/g)
+            .map(property => /^["']/.test(property) ? property.slice(1, -1) : property);
+        let value = context;
+
+        for (const property of properties) {
+            if (FORBIDDEN_PROPERTIES.has(property)) {
+                throw new Error('Template paths cannot access prototype properties.');
+            }
+
+            if (value == null || !Object.hasOwn(Object(value), property)) {
+                return '';
+            }
+
+            value = value[property];
+        }
+
+        const result = value == null ? '' : String(value);
+        return html ? escapeHtml(result) : result;
+    });
+}
+
+function getMessagesUrl(baseUrl, domain) {
+    if (domain.length > 253 || !domain.split('.').every(label => /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(label))) {
+        throw new Error('Invalid Mailgun domain. Enter a domain name without a URL, port, or path.');
+    }
+
+    let url;
+    try {
+        url = new URL(baseUrl);
+    } catch {
+        throw new Error('Invalid Mailgun API base URL. Enter an absolute HTTPS URL.');
+    }
+
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) {
+        throw new Error('Mailgun API base URL must use HTTPS without credentials, query parameters, or a fragment.');
+    }
+
+    url.pathname = `${url.pathname.replace(/\/+$/, '')}/v3/${encodeURIComponent(domain)}/messages`;
+    return url;
+}
+
+function configureProxy(env) {
+    const proxy = env.https_proxy || env.HTTPS_PROXY || env.http_proxy || env.HTTP_PROXY || env.all_proxy || env.ALL_PROXY;
+
+    if (!proxy) {
+        return;
+    }
+
+    if (typeof http.setGlobalProxyFromEnv !== 'function') {
+        throw new Error('Proxy support requires Node.js 24.14 or newer. Update your GitHub Actions runner.');
+    }
+
+    try {
+        return http.setGlobalProxyFromEnv({
+            HTTPS_PROXY: proxy,
+            NO_PROXY: env.no_proxy || env.NO_PROXY || ''
+        });
+    } catch {
+        throw new Error('Invalid runner proxy configuration. Check your HTTPS_PROXY or HTTP_PROXY setting.');
+    }
+}
+
+async function readResponse(response) {
+    const chunks = [];
+    let size = 0;
+
+    if (response.body) {
+        for await (const chunk of response.body) {
+            size += chunk.byteLength;
+            if (size > MAX_RESPONSE_BYTES) {
+                throw new Error('Mailgun API response exceeded 1 MiB.');
+            }
+            chunks.push(chunk);
+        }
+    }
+
+    return Buffer.concat(chunks).toString('utf8');
+}
+
+async function sendMessage(url, apiKey, messageData, fetchImpl = fetch) {
+    const body = new FormData();
+    for (const [name, value] of Object.entries(messageData)) {
+        body.append(name, value);
+    }
+
+    let response;
+    let text;
+    try {
+        response = await fetchImpl(url, {
+            method: 'POST',
+            headers: {
+                Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString('base64')}`
+            },
+            body,
+            redirect: 'error',
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+        });
+        text = await readResponse(response);
+    } catch (error) {
+        if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+            throw new Error('Mailgun request timed out after 30 seconds. Check delivery before retrying.');
+        }
+        throw error;
+    }
+
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch {
+        if (response.ok) {
+            throw new Error('Mailgun returned an invalid JSON response. Check delivery before retrying.');
+        }
+    }
+
+    if (!response.ok) {
+        const error = new Error(`Mailgun request failed (HTTP ${response.status}).`);
+        error.status = response.status;
+        error.details = (typeof data?.message === 'string' ? data.message : text).slice(0, 2000);
+        throw error;
+    }
+
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        throw new Error('Mailgun returned an invalid message response. Check delivery before retrying.');
+    }
+
+    return data;
 }
 
 function formatMailgunError(error, domain) {
-    const status = error && typeof error.status === 'number' ? error.status : error && error.status;
-    const details = error && typeof error.details === 'string' ? error.details : '';
-    const message = error && error.message ? error.message : String(error);
+    const status = error?.status;
+    const details = typeof error?.details === 'string' ? error.details : '';
+    const message = error?.message || String(error);
 
     if (status === 403 || message === 'Forbidden') {
         const hints = [
@@ -113,72 +248,69 @@ function formatMailgunError(error, domain) {
         return hints.join(' ');
     }
 
-    if (details && details !== message) {
-        return `${message} ${details}`;
-    }
-
-    return message;
+    return details && details !== message ? `${message} ${details}` : message;
 }
 
-async function run() {
+function secretValues(apiKey) {
+    return apiKey ? [...new Set([apiKey, Buffer.from(`api:${apiKey}`).toString('base64'), encodeURIComponent(apiKey)])] : [];
+}
+
+function redactSecrets(value, apiKey) {
+    for (const secret of secretValues(apiKey)) {
+        value = value.replaceAll(secret, '***');
+    }
+    return value;
+}
+
+async function run({ env = process.env, fetchImpl = fetch, write } = {}) {
+    const apiKey = getInput('api-key', env);
+
     try {
-        const apiKey = getRequiredInput('api-key', 'Undefined Mailgun API key. Please add "api-key" input in your workflow file.');
-        const useEuRegion = isTruthyInput(getOptionalInput('eu-region')) || isTruthyInput(process.env.MAILGUN_EU_REGION || '');
-        const apiBaseUrl = getOptionalInput('api-base-url') || (process.env.MAILGUN_API_BASE_URL || '').trim();
-        const domain = getRequiredInput('domain', 'Undefined domain. Please add "domain" input in your workflow file.');
-        const to = getRequiredInput('to', 'Undefined email address of the recipient(s). Please add "to" input in your workflow file.');
-        const cc = getOptionalInput('cc');
-        const from = getOptionalInput('from') || `hello@${domain}`;
-
-        setSecret(apiKey);
-
-        const {
-            GITHUB_ACTOR,
-            GITHUB_EVENT_NAME,
-            GITHUB_EVENT_PATH,
-            GITHUB_REPOSITORY
-        } = process.env;
-
-        const eventPayload = readEventPayload(GITHUB_EVENT_PATH);
-        const defaultMessage = `@${GITHUB_ACTOR || 'unknown'} (${GITHUB_EVENT_NAME || 'unknown'}) at ${GITHUB_REPOSITORY || 'unknown'}`;
-        const templateContext = { ...process.env, EVENT_PAYLOAD: eventPayload };
-
-        const subjectInput = getOptionalInput('subject');
-        const bodyInput = getOptionalInput('body');
-        const subject = subjectInput ? interpolateTemplate(subjectInput, templateContext) : defaultMessage;
-        const body = bodyInput ? interpolateTemplate(bodyInput, templateContext) : defaultMessage;
-
-        const mailgun = new Mailgun(FormData);
-        const clientOptions = {
-            username: 'api',
-            key: apiKey
-        };
-
-        if (apiBaseUrl) {
-            clientOptions.url = apiBaseUrl;
-        } else if (useEuRegion) {
-            clientOptions.url = 'https://api.eu.mailgun.net';
+        for (const secret of secretValues(apiKey)) {
+            issueWorkflowCommand('add-mask', secret, write);
         }
 
-        const client = mailgun.client(clientOptions);
-
+        getRequiredInput('api-key', 'Undefined Mailgun API key. Please add "api-key" input in your workflow file.', env);
+        const domain = getRequiredInput('domain', 'Undefined domain. Please add "domain" input in your workflow file.', env);
+        const to = getRequiredInput('to', 'Undefined email address of the recipient(s). Please add "to" input in your workflow file.', env);
+        const cc = getInput('cc', env);
+        const useEuRegion = isTruthyInput(getInput('eu-region', env)) || isTruthyInput(env.MAILGUN_EU_REGION || '');
+        const apiBaseUrl = getInput('api-base-url', env) || (env.MAILGUN_API_BASE_URL || '').trim()
+            || (useEuRegion ? 'https://api.eu.mailgun.net' : 'https://api.mailgun.net');
+        const url = getMessagesUrl(apiBaseUrl, domain);
+        const eventPayload = readEventPayload(env.GITHUB_EVENT_PATH, write);
+        const defaultMessage = `@${env.GITHUB_ACTOR || 'unknown'} (${env.GITHUB_EVENT_NAME || 'unknown'}) at ${env.GITHUB_REPOSITORY || 'unknown'}`;
+        const templateContext = { ...env, EVENT_PAYLOAD: eventPayload };
+        const subjectInput = getInput('subject', env);
+        const bodyInput = getInput('body', env);
         const messageData = {
-            from,
+            from: getInput('from', env) || `hello@${domain}`,
             to,
-            subject,
-            html: body
+            subject: subjectInput ? interpolateTemplate(subjectInput, templateContext) : defaultMessage,
+            html: bodyInput ? interpolateTemplate(bodyInput, templateContext, true) : escapeHtml(defaultMessage)
         };
 
         if (cc) {
             messageData.cc = cc;
         }
 
-        const response = await client.messages.create(domain, messageData);
-
-        setOutput('response', response.message || JSON.stringify(response));
+        const restoreProxy = configureProxy(env);
+        let response;
+        try {
+            response = await sendMessage(url, apiKey, messageData, fetchImpl);
+        } finally {
+            restoreProxy?.();
+        }
+        const message = typeof response.message === 'string' && response.message ? response.message : JSON.stringify(response);
+        setOutput('response', redactSecrets(message, apiKey), env, write);
     } catch (error) {
-        setFailed(formatMailgunError(error, getOptionalInput('domain')));
+        process.exitCode = 1;
+        issueWorkflowCommand('error', redactSecrets(formatMailgunError(error, getInput('domain', env)), apiKey), write);
     }
 }
 
-run();
+module.exports = { escapeWorkflowValue, getInput, setOutput, readEventPayload, interpolateTemplate, getMessagesUrl, sendMessage, formatMailgunError, run };
+
+if (require.main === module) {
+    run();
+}

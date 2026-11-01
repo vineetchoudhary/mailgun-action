@@ -2,18 +2,27 @@ name: On Push Email
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   send-mail:
     runs-on: ubuntu-latest
     name: Send email on every push
+    timeout-minutes: 2
     steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Send Mail Action
       id: sendmail
-      uses: vineetchoudhary/mailgun-action@master
+      uses: ./
       with:
         api-key: ${{ secrets.API_KEY }}
         domain: ${{ secrets.DOMAIN }}
         to: ${{ secrets.TO }}
         cc: ${{ secrets.CC }}
     - name: Send Mail Action Response
-      run: echo "${{ steps.sendmail.outputs.response }}"
+      env:
+        MAILGUN_RESPONSE: ${{ steps.sendmail.outputs.response }}
+      run: printf '%s\n' "$MAILGUN_RESPONSE"

@@ -32,6 +32,8 @@ This action lets you send emails from any workflow event, with support for custo
 | --- | --- |
 | `response` | Response message returned by the Mailgun API. |
 
+Pass outputs to shell steps through an environment variable, as shown below.
+
 ## 🧠 Template Interpolation
 
 You can reference GitHub Actions environment variables and the GitHub event payload in `subject` and `body` using `{{ ... }}` syntax.
@@ -50,6 +52,10 @@ Pull request ID: {{ EVENT_PAYLOAD.pull_request.id }}
 
 This is useful for building notification emails from workflow events such as `push`, `pull_request`, or `issue_comment`.
 
+Array indices and quoted keys are supported, for example `{{ EVENT_PAYLOAD.commits[0].message }}` and `{{ EVENT_PAYLOAD["pull_request"].id }}`. Missing values become empty text.
+
+Templates support data paths only. JavaScript expressions, function calls, and Lodash script evaluation are not supported. Values inserted into `body` are HTML-escaped, so event content cannot add HTML to your message. HTML written directly in the template is preserved.
+
 ## 🚀 Example Usage
 
 ### Default email on every push
@@ -58,6 +64,8 @@ This is useful for building notification emails from workflow events such as `pu
 name: On Push Email
 
 on: [push]
+
+permissions: {}
 
 jobs:
   send-mail:
@@ -72,7 +80,9 @@ jobs:
           to: ${{ secrets.TO }}
 
       - name: Print Mailgun Response
-        run: echo "${{ steps.sendmail.outputs.response }}"
+        env:
+          MAILGUN_RESPONSE: ${{ steps.sendmail.outputs.response }}
+        run: printf '%s\n' "$MAILGUN_RESPONSE"
 ```
 
 **Preview**
@@ -87,6 +97,8 @@ name: Issue Activity
 on:
   issue_comment:
     types: [created, edited, deleted]
+
+permissions: {}
 
 jobs:
   send-mail:
@@ -103,7 +115,9 @@ jobs:
           body: '<p><b>Body</b> - {{ EVENT_PAYLOAD.comment.body }}<br /><br /><b>Issue Activity</b> - {{ EVENT_PAYLOAD.action }}<br /><br /><b>URL</b> - {{ EVENT_PAYLOAD.comment.html_url }}<br /><br /><b>By</b> - {{ EVENT_PAYLOAD.comment.user.login }}</p>'
 
       - name: Print Mailgun Response
-        run: echo "${{ steps.sendmail.outputs.response }}"
+        env:
+          MAILGUN_RESPONSE: ${{ steps.sendmail.outputs.response }}
+        run: printf '%s\n' "$MAILGUN_RESPONSE"
 ```
 
 **Preview**
@@ -116,6 +130,8 @@ jobs:
 name: EU Region Email
 
 on: [push]
+
+permissions: {}
 
 jobs:
   send-mail:
@@ -139,6 +155,8 @@ with:
   domain: ${{ secrets.DOMAIN }}
   to: ${{ secrets.TO }}
 ```
+
+Custom API base URLs must use HTTPS and contain no credentials, query parameters, or fragment. Requests time out after 30 seconds and do not follow redirects or automatically retry. Check Mailgun delivery logs before retrying after a timeout or an invalid response to avoid duplicate emails.
 
 ## ⚠️ Deliverability Notes
 
@@ -166,3 +184,7 @@ Common causes:
 ### `Undefined Mailgun API key`
 
 Make sure your workflow passes `api-key` under `with:` and that the referenced secret exists.
+
+## Development
+
+The action uses Node.js 24 and has no npm dependencies. See the [development guide](docs/README.md) for tests, packaging, and security checks.
